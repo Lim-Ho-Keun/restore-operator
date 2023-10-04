@@ -35,7 +35,7 @@ spec:
           spec:
             description: RestoreSpec defines the desired state of Restore
             properties:
-              fileName:
+              FileName:
                 description: Foo is an example field of Restore. Edit restore_types.go
                   to remove/update
                 type: string

@@ -29,7 +29,7 @@ type RestoreSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// Foo is an example field of Restore. Edit restore_types.go to remove/update
-	fileName string `json:"fileName,omitempty"`
+	FileName string `json:"FileName,omitempty"`
 }
 
 // RestoreStatus defines the observed state of Restore

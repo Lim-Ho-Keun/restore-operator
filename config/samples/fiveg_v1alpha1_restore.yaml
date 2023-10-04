@@ -9,4 +9,5 @@ metadata:
     app.kubernetes.io/created-by: restore-operator
   name: restore-sample
 spec:
+  FileName: dump_5gc_dabase_all_20231004_123543.sql
   # TODO(user): Add fields here

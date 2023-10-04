@@ -71,9 +71,6 @@ func (r *RestoreReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	// Try to connect with first password, then tried second else fails gracefully
 
 	for _, credentials := range loginAccess {
-		if sshclient, err2 = simplessh.ConnectWithPassword("172.10.1.23", credentials.login, credentials.password); err2 == nil {
-			break
-		}
 		if sshclient2, err2 = simplessh.ConnectWithPassword("172.10.1.28", credentials.login, credentials.password); err2 == nil {
 			break
 		}
@@ -89,7 +86,6 @@ func (r *RestoreReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	           fmt.Println("Error creating new SSH session from existing connection", err)
 	   }
 	*/
-	defer sshclient.Close()
 	defer sshclient2.Close()
 
 	err := r.Get(context.TODO(), req.NamespacedName, instance)
@@ -108,13 +104,47 @@ func (r *RestoreReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	}
 
-	fileName := instance.Spec.fileName
+	fileName := instance.Spec.FileName
+
+	fmt.Println(fileName)
+
+	command := "sshpass -p swinfra12 scp -r -o StrictHostKeyChecking=no /root/backup/" + fileName + " root@172.10.1.23:/root/backup/"
+
+	fmt.Println("command1")
+	fmt.Println(command)
 
 	//send file from mangement cluster to restore cluster
-	if _, err2 := sshclient2.Exec("sshpass -p swinfra12 scp -r -o StrictHostKeyChecking=no /root/backup/" + fileName + " root@172.10.1.23:/root/bakcup/"); err2 != nil {
+	if _, err2 := sshclient2.Exec(command); err2 != nil {
+		fmt.Println("send file")
+		fmt.Println(err2)
 	}
 
-	if _, err2 := sshclient.Exec("bash /root/restore.sh /root/backup/" + fileName); err2 != nil {
+	for _, credentials := range loginAccess {
+		if sshclient, err2 = simplessh.ConnectWithPassword("172.10.1.23", credentials.login, credentials.password); err2 == nil {
+			break
+		}
+
+	}
+
+	if err2 != nil {
+		return ctrl.Result{}, err2
+	}
+	/*
+	   client, err2 := scp.NewClientBySSH(sshclient)
+	   if err2 != nil {
+	           fmt.Println("Error creating new SSH session from existing connection", err)
+	   }
+	*/
+	defer sshclient.Close()
+
+	command = "bash /root/restore_db.sh /root/backup/" + fileName
+
+	fmt.Println("command2")
+	fmt.Println(command)
+
+	if _, err2 := sshclient.Exec(command); err2 != nil {
+		fmt.Println("exec restore")
+		fmt.Println(err2)
 	}
 
 	return ctrl.Result{}, nil
